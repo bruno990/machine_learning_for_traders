@@ -17,7 +17,7 @@ desvio = 2              # Dimensão do desvio da janela dos indicadores
 batch_size = 360        # Dimensão do Lote de memória para treinar o modelo ( features - X )  
 intervalo = 10           # Intervalo entre as consultas de tickers no servidor
 dim = 360  # Dimensão da janela para visualização dos sinais dos indicadores 
-saldo = 10000 # Quantidade de Dólares na carteira para simulação
+
 ## ---------------------------------
 
 
@@ -119,19 +119,17 @@ def detect_cross(bid, ask, lower_band, upper_band, index):
         if historico_bid[-1:] > historico_lower_band[-1:] and historico_bid[-2:-1] <= historico_lower_band[-2:-1]:
             historico_compras.append(float(ask))
             index_compras.append(index)
-            sinal = "Buy"
             sinal_action = 1
 
         elif historico_bid[-1:] < historico_upper_band[-1:] and historico_bid[-2:-1] >= historico_upper_band[-2:-1]:
             historico_vendas.append(float(bid))
             index_vendas.append(index)
-            sinal = "Sell"
             sinal_action =2
         else:
-            sinal = "Hold"
+
             sinal_action = 0
     else:
-        sinal = "Hold"
+
         sinal_action = 0
     historico_sinal.append(sinal_action) 
 
@@ -177,7 +175,7 @@ def get_tickers():
 
 
 def main():
-    global epoch, historico, saldo, lances
+    global epoch, historico, lances
 
     df = pd.read_csv("tickers.csv")
 
@@ -236,20 +234,19 @@ def main():
                 for ind in range(0,6):       
  
                     if sinal_action[ind] == 1:
-                        if historico[ind] != "COMPRA" and saldo >= float(ask[-1:]):
+                        if historico[ind] != "COMPRA":
                             compras[ind] = float(ask[-1:])
                             X_temp[ind] = batch[-batch_size:]
                             print("--**--** COMPRA - ", str(float( compras[ind])))
                             lances += 1
-                            saldo = float(saldo - float(ask[-1:]))
+
                         elif historico[ind] == "COMPRA":
                             X.append(X_temp[ind])
                             Y.append(0)
                             X_temp[ind] = batch[-batch_size:]
-                            #compras[ind] = float(ask[-1:])
+                            compras[ind] = float(ask[-1:])
                             epoch += 1
-                        elif saldo < float(ask[-1:]):
-                              print("*- Saldo insuficiente para efetuar a compra. -*")
+
 
                         historico[ind] = "COMPRA" 
 
@@ -260,8 +257,6 @@ def main():
                         lances += 1
                         lucro = float(float(vendas[ind]) - float(compras[ind]))
 
-
-                        saldo += float(bid[-1:])
                         print("--**--** VENDA ", str(float( vendas[ind]))," - Lucro = US$ ", str(lucro))
                         if lucro > 0:
                             try:
@@ -308,7 +303,6 @@ def main():
 volta = 1
 while True:
     print("--------------------------- ")
-    print("Saldo = US$ ", np.around(saldo,2))
     print("Lances = ", lances)
     print("Tickers - ", volta)
     volta += 1 
