@@ -4,12 +4,14 @@ import pandas as pd
 import time
 import os
 import numpy as np
-from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.externals import joblib
+from threading import Thread
+from sklearn.ensemble import BaggingRegressor
 
 existe = os.path.isfile('tickers.csv')
-svm = SVC(kernel='rbf', random_state=0, gamma=.01, C=3)
-
+lgr = LogisticRegression(random_state=0	, solver='lbfgs',multi_class='auto', max_iter=5000, verbose=1, tol=0.0001)
+bagging = BaggingClassifier(lgr, max_samples=0.5, max_features=0.5)
 ## CONFIGURAÇÃO DOS PARÂMETROS
 
 janela = 360            # Dimensão da janela para cálculo de indicadores
@@ -256,7 +258,6 @@ def main():
                         epoch += 1
                         lances += 1
                         lucro = float(float(vendas[ind]) - float(compras[ind]))
-
                         print("--**--** VENDA ", str(float( vendas[ind]))," - Lucro = US$ ", str(lucro))
                         if lucro > 0:
                             try:
@@ -290,10 +291,8 @@ def main():
 
         if epoch % 50 == 0 and epoch > 0:
  
-
-             svm.fit(X0,y)
-             joblib.dump(svm, "modelo-"+str(epoch)+".pkl", compress=3)
-             print("--*--* Modelo Salvo - modelo-"+str(epoch)+".pkl")
+             tt = Thread(target=salva, args=[lgr,epoch,X0,y])
+             tt.start()
         if len(batch) < batch_size:  
             print("Batch Total", len(batch))
         print("Epoch - ", str(epoch))
@@ -301,6 +300,13 @@ def main():
 
 
 volta = 1
+
+def salva(lgr,epoch,X0,y):
+    bagging.fit(X0,y)
+    joblib.dump(bagging, "modelo-"+str(epoch)+".pkl", compress=3)
+    print("--*--* Modelo Salvo - modelo-"+str(epoch)+".pkl")
+
+
 while True:
     print("--------------------------- ")
     print("Lances = ", lances)
@@ -313,8 +319,3 @@ while True:
         time.sleep(5)
         pass 
     main()
-    '''try:
-        main()
-    except:
-        print("- - ENCERRANDO --")
-        exit()  '''
