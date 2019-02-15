@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.externals import joblib
 from threading import Thread
-from sklearn.ensemble import BaggingRegressor
+from sklearn.ensemble import BaggingClassifier
 
 existe = os.path.isfile('tickers.csv')
 lgr = LogisticRegression(random_state=0	, solver='lbfgs',multi_class='auto', max_iter=5000, verbose=1, tol=0.0001)
